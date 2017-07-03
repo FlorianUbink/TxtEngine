@@ -1,0 +1,23 @@
+﻿420
+#PRINT
+This is a testfile.
+Here we test the text engine
+its going to be fun
+#END
+#BRANCH
+CHOICE
+0
+okey its working
+1
+spelunky
+#END
+#ENDBLOCK
+
+425
+#PRINT
+yeah 2 blocks motherfucker!
+best game in the world
+jeeeez
+#END
+#ENDBLOCK
+
