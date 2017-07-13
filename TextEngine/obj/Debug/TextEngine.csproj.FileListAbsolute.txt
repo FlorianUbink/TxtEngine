@@ -4,3 +4,9 @@ C:\Users\Florian\Documents\Projects\TextEngine\TextEngine\bin\Debug\TextEngine.p
 C:\Users\Florian\Documents\Projects\TextEngine\TextEngine\obj\Debug\TextEngine.csprojResolveAssemblyReference.cache
 C:\Users\Florian\Documents\Projects\TextEngine\TextEngine\obj\Debug\TextEngine.exe
 C:\Users\Florian\Documents\Projects\TextEngine\TextEngine\obj\Debug\TextEngine.pdb
+D:\Repositories\TextEngine\TextEngine\bin\Debug\TextEngine.exe.config
+D:\Repositories\TextEngine\TextEngine\obj\Debug\TextEngine.exe
+D:\Repositories\TextEngine\TextEngine\obj\Debug\TextEngine.pdb
+D:\Repositories\TextEngine\TextEngine\bin\Debug\TextEngine.exe
+D:\Repositories\TextEngine\TextEngine\bin\Debug\TextEngine.pdb
+D:\Repositories\TextEngine\TextEngine\obj\Debug\TextEngine.csprojResolveAssemblyReference.cache

@@ -1,0 +1,27 @@
+﻿425
+#PRINT
+This is text 425.
+press 1 for text 222
+press 2 for text 426
+#END
+#CHOICE
+1
+LINK|222
+2
+LINK|426
+#END
+#ENDCELL
+
+
+
+426
+#PRINT
+This is:
+PLAYER|get Name
+PLAYER|set Name = Jan
+BREAK|INPUT
+PLAYER|get Name
+BREAK|INPUT
+LINK|425
+#END
+#ENDCELL

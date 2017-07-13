@@ -14,93 +14,83 @@ namespace TextEngine
         List<string> currentBlock;
         int lineIndex;
 
+        public string currentFile { get; set; }
+        public int currentStory { get; set; }
+
         public StreamProcessor(GameManager gameHandler)
         {
             gameHandle = gameHandler;
         }
 
-
-        // Loads new file
+        // Loads new file from full path
         public void LoadFile(string fileName)
         {
-            currentStream = new StreamReader(@"..\..\StoryBlock\" + fileName);  //TODO: TEST WITH BUILD
+            currentFile = fileName;
+            currentStream = new StreamReader(currentFile);
         }
 
-        // Get New StoryBlock
-        public void GetBlock(string blockIndex)
+
+
+
+        public bool GetCell(int cellNum)
         {
-            currentBlock = new List<string>();
-            string line = currentStream.ReadLine();
-            // Finds block starting point in filestream
-            while (line != blockIndex)
+            bool success = false;
+
+            if (currentStream != null)
             {
-                line = currentStream.ReadLine();
+                currentBlock = new List<string>();
+                string line = currentStream.ReadLine();
+
+                while (line != "" + cellNum && !currentStream.EndOfStream)
+                {
+                    line = currentStream.ReadLine();
+                }
+                if (line == "" + cellNum)
+                {
+                    while (line != "#ENDCELL")
+                    {
+                        currentBlock.Add(line);
+                        line = currentStream.ReadLine();
+                    }
+                    currentBlock.Remove("" + cellNum);
+                    success = true;
+                }
+                else
+                {
+                    success = false;
+                }
             }
 
-            line = currentStream.ReadLine();
-            // adds following lines to currentblock till ENDBLOCK
-            while (line != "#ENDBLOCK")
-            {
-                currentBlock.Add(line);
-                line = currentStream.ReadLine();
-            }
-            lineIndex = -1;
-
+            return success;
         }
 
-        // TODO: ABLE TO Process NEXT COMMANDBLOCK
-        public void ProcessNext()
+        public List<string> NextCommand()
         {
-            lineIndex += 1;
-            Command currentCommand = Command.Empty;
-            List<string> commandStrings = new List<string>();
+            List<string> nextCommand = new List<string>();
+            bool openGate = false;
 
-            // 1 Read Current Line
-            string line = currentBlock[lineIndex];
 
-            // 2 Switch between comamnds
-
-            switch (line)
+            foreach (string line in currentBlock)
             {
-                case "#PRINT":
-                    currentCommand = Command.Print;
+                if (line.First<char>() == '#' && line != "#END")
+                {
+                    openGate = true;
+                }
+
+                else if (line == "#END")
+                {
+                    openGate = false;
                     break;
+                }
 
-                case "#BRANCH":
-                    lineIndex += 1;
-                    line = currentBlock[lineIndex];
-
-                    if (line == "CHOICE")
-                    {
-                        currentCommand = Command.Choice;
-                        
-                    }
-
-                    else if (line == "ROLL")
-                    {
-                        currentCommand = Command.Roll;
-                    }
-                    break;
-
-                default:
-                    break;
+                if (openGate)
+                {
+                    nextCommand.Add(line);
+                }
             }
 
-            lineIndex += 1;
-            line = currentBlock[lineIndex];
-            //3 Iterate current Command
-
-            while (line != "#END")
-            {
-                commandStrings.Add(line);
-
-                lineIndex += 1;
-                line = currentBlock[lineIndex];
-
-            }
-
-            // 4 sent CurrentCommand to GameManger
-            gameHandle.ProcessCommand(currentCommand, commandStrings);
+            currentBlock.RemoveRange(0, nextCommand.Count + 1);
+            return nextCommand;
         }
     }
 }

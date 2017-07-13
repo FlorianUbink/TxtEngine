@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Timers;
 using System.Threading.Tasks;
+using System.Reflection;
 
 namespace TextEngine
 {
@@ -13,79 +15,242 @@ namespace TextEngine
         Print,
         Choice,
         Roll,
+        Link,
         Empty
     }
 
     public class GameManager
     {
-        // called by StreamProcessor when it processed a new commandblock
-        public void ProcessCommand(Command command, List<string> commandData)
+        #region ClassInstances
+        StreamProcessor streamProcessor;
+        Library library;
+        Player player;
+        #endregion
+
+        Random dice;
+        Timer holdTimer;
+
+        #region properties
+        public bool Active = true;
+        bool BlockActive = true;
+
+        bool execute = false;
+        #endregion
+
+
+
+
+        public GameManager()
         {
-            switch (command)
+            #region InitiateClasses
+            streamProcessor = new StreamProcessor(this);
+            library = new Library();
+            #endregion
+
+            dice = new Random();
+            holdTimer = new Timer();
+            player = new Player();
+        }
+
+        public void Update()
+        {
+            while (execute)
             {
-                case Command.Print:
-                    foreach (string line in commandData)
+                ExecuteCommand();
+            }
+
+        }
+
+        public void TEST()
+        {
+            LinkTo(425);
+            execute = true;
+            player.Name = "Florian";
+        }
+
+
+
+
+        // called by StreamProcessor when it processed a new commandblock
+
+        public void ExecuteCommand()
+        {
+            List<string> commandBlock = streamProcessor.NextCommand();
+
+            string commandLine = commandBlock[0];
+
+            switch (commandLine)
+            {
+                case "#PRINT":
+                    commandBlock.Remove(commandLine);
+                    foreach (string line in commandBlock)
                     {
-                        Console.WriteLine(line);
+                        bool a = interTextCommands(line);
+                        if (!a)
+                        {
+                            Console.WriteLine(line);
+                        }
+                        
                     }
                     break;
 
-                case Command.Choice:
+                case "#CHOICE":
+                    commandBlock.Remove(commandLine);
+
                     int c = 0;
 
                     // Reads inputline from player, if input is not valid then 0 else 1
                     do
                     {
                         string condition = Console.ReadLine();
-                        c = ExecuteBranch(commandData, condition);
+                        c = ExecuteBranch(commandBlock, condition);
 
                     } while (c != 1);
 
                     break;
-                case Command.Roll:
+                case "#ROLL":
                     // roll dice
+                    string cond2 = "" + dice.Next(0, 2);
                     // execute branch
+                    ExecuteBranch(commandBlock, cond2);
                     break;
+
                 default:
                     break;
             }
         }
 
+
+
+
+
         private int ExecuteBranch(List<string> branchData, string input)
         {
-            int index = 0;
-            bool match = false;
 
-            while (!match)
+            #region LoadBranch
+            Dictionary<string, string> BranchDic = new Dictionary<string, string>();
+
+            for (int i = 0; i < branchData.Count - 1;)
             {
-                // if the index is to high, input must be invalid
-                if (index > branchData.Count - 1)
+                BranchDic.Add(branchData[i], branchData[i + 1]);
+                i += 2;
+            }
+            #endregion
+
+            #region FindMatch
+            if (BranchDic.ContainsKey(input))
+            {
+                // Finds Match
+                interTextCommands(BranchDic[input]);
+                return 1;
+            }
+            else
+            {
+                // no match: not correct input
+                Console.WriteLine("ERROR: INPUT DOESNT MATCH!");
+                return 0;
+            }
+            #endregion
+        }
+
+        private bool interTextCommands(string line)
+        {
+
+            if (line.Contains('|'))
+            {
+                string subline = line.Substring(0, line.IndexOf("|"));
+
+                switch (subline)
                 {
-                    Console.WriteLine("INPUT ERROR MATCH NOT FOUND: PLEASE REFRASE");
-                    return 0;
+                    case "CLEAR":
+                        Console.Clear();
+                        break;
+
+                    case "LINK":
+                        int key = int.Parse(line.Substring(subline.Length + 1));
+                        LinkTo(key);
+                        break;
+                    case "BREAK":
+                        string fullType = line.Substring(subline.Length + 1);
+                        string type = fullType.Substring(0, 5);
+
+                        switch (type)
+                        {
+                            case "INPUT":
+                                Console.ReadLine();
+                                break;
+                            case "TIMER":
+                                // wait
+                                break;
+                            default:
+                                break;
+                        }
+                        break;
+
+                    case "PLAYER":
+                        string fullCommand = line.Substring(subline.Length + 1);
+                        string getorset = fullCommand.Remove(4);
+                        getorset = getorset.Trim();
+
+
+                        switch (getorset)
+                        {
+                            case "get":
+                                string property = fullCommand.Substring(4);
+                                property = property.Trim();
+                                PropertyInfo info = player.GetType().GetProperty(property);
+                                string a = (string)info.GetValue(player);
+                                Console.Write(a);
+                                break;
+
+                            case "set":
+                                string subProp = fullCommand.Substring(4);
+                                property = subProp.Substring(0, subProp.IndexOf('='));
+                                property = property.Trim();
+                                string value = subProp.Substring(subProp.IndexOf('=') + 1);
+                                value = value.Trim();
+
+                                info = player.GetType().GetProperty(property);
+                                info.SetValue(player, value);
+                                break;
+
+                            default:
+                                break;
+                        }
+                        break;
+                    default:
+                        break;
+                }
+                return true;
+            }
+
+            else
+            {
+                return false;
+            }
+        }
+
+        private void LinkTo(int cellNum)
+        {
+            bool validFile = streamProcessor.GetCell(cellNum);
+
+            if (!validFile)
+            {
+                string filePath = library.FindFile(cellNum);
+
+                // throw error if there is no filepath
+                if (filePath == "ERROR")
+                {
+                    throw new Exception("ERROR: StoryBlock not Found.");
                 }
 
-                // input is correct, end loop + result
-                else if (input == branchData[index])
-                {
-                    index += 1;
-                    match = true;
-                    //choice made
-
-                    Console.WriteLine(branchData[index]);
-                }
-
-                // input incorrect, adds 2 for next conditioncheck
                 else
                 {
-                    index += 2;
+                    streamProcessor.LoadFile(filePath);
+                    streamProcessor.GetCell(cellNum);
                 }
-
             }
-            // input was vallid
-            return 1;
-
-
         }
+
     }
 }

@@ -1,0 +1,11 @@
+﻿222
+#PRINT
+This is text 222.
+#END
+#CHOICE
+1
+LINK|426
+2
+LINK|425
+#END
+#ENDCELL

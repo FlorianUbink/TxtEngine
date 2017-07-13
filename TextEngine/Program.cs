@@ -14,19 +14,11 @@ namespace TextEngine
         {
 
             GameManager gameHandle = new GameManager();
-            StreamProcessor procesHandle = new StreamProcessor(gameHandle);
 
+            gameHandle.TEST();
 
-            procesHandle.LoadFile("TestFile.txt");
-            procesHandle.GetBlock("420");
-
-            procesHandle.ProcessNext();
-
-            procesHandle.ProcessNext();
+            gameHandle.Update();
             Console.ReadLine();
-
-
-
 
         }
     }
