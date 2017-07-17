@@ -28,6 +28,8 @@ namespace TextEngine
         #endregion
 
         Random dice;
+        int DiceRoll = -1;
+        int maxDice = 0;
         Timer holdTimer;
 
         #region properties
@@ -63,7 +65,7 @@ namespace TextEngine
 
         public void TEST()
         {
-            LinkTo(425);
+            LinkTo(500);
             execute = true;
             player.Name = "Florian";
         }
@@ -115,13 +117,15 @@ namespace TextEngine
                     ExecuteBranch(commandBlock, cond2);
                     break;
 
+                case "#BRANCH":
+                    commandBlock.Remove(commandLine);
+                    AdvBranch(commandBlock, dice);
+                    break;
+
                 default:
                     break;
             }
         }
-
-
-
 
 
         private int ExecuteBranch(List<string> branchData, string input)
@@ -159,7 +163,6 @@ namespace TextEngine
             if (line.Contains('|'))
             {
                 string subline = line.Substring(0, line.IndexOf("|"));
-
                 switch (subline)
                 {
                     case "CLEAR":
@@ -229,6 +232,138 @@ namespace TextEngine
                 return false;
             }
         }
+
+
+        private void AdvBranch(List<string> cBlock, Random dice)
+        {
+            Dictionary<string, string> choices = new Dictionary<string, string>();
+            List<string> keyRoll = new List<string>();
+            string inputKey = "";
+            bool input = false;
+            bool sucessfull = false;
+
+            foreach (string line in cBlock)
+            {
+                if (line.Contains("DICE"))
+                {
+                    string subline = line.Substring(6);
+                    subline.Trim();
+                    maxDice = int.Parse(subline);
+                }
+
+                else if (line.Contains("CHOICE"))
+                {
+                    int index = cBlock.IndexOf(line) + 1;
+
+                    for (int i = index; i < cBlock.Count - 1;)
+                    {
+                        choices.Add(cBlock[i], cBlock[i + 1]);
+                        i += 2;
+                    }
+
+                    DiceRoll = dice.Next(0, maxDice);
+
+                    foreach (string rawcondition in choices.Keys)
+                    {
+                        if (rawcondition.Contains("DICE|"))
+                        {
+                            string RollCondition = rawcondition.Substring(rawcondition.IndexOf("DICE|") + 5);
+                            RollCondition.Trim();
+                            int cIn = RollCondition.IndexOfAny(new Char[] { '1', '2', '3', '4', '5', '6', '7', '8', '9', '0'});
+                            int oIn = RollCondition.IndexOfAny(new Char[] { '>', '<', '=', '!' });
+                            string Oper = RollCondition.Substring(oIn, (cIn - oIn));
+                            int cond = int.Parse(RollCondition.Substring(cIn));
+
+                            bool result = DiceOperation(DiceRoll, cond, Oper);
+
+                            if (result)
+                            {
+                                keyRoll.Add(rawcondition);
+                            }
+                        }
+                    }
+
+                    do
+                    {
+                        string rawInput = Console.ReadLine();
+
+                        foreach (string rawCondition in choices.Keys)
+                        {
+                            if (rawCondition.Contains("INPUT|"))
+                            {
+                                string condition = rawCondition.Substring(rawCondition.IndexOf("INPUT|") + 6);
+                                if (condition.Contains(','))
+                                {
+                                    condition = condition.Substring(0, condition.IndexOf(','));
+                                    condition.Trim();
+                                }
+
+                                if (condition == rawInput)
+                                {
+                                    input = true;
+                                    inputKey = rawCondition;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (!input)
+                        {
+                            Console.WriteLine("ERROR INPUT IS FALSE");
+                        }
+
+
+                    } while (!input);
+
+                    if (keyRoll.Count > 0)
+                    {
+                        foreach (string rollKey in keyRoll)
+                        {
+                            if (rollKey == inputKey)
+                            {
+                                sucessfull = true;
+                                break;
+                            }
+
+                        }
+                    }
+                    if (sucessfull)
+                    {
+                        string[] operations = choices[inputKey].Split(',');
+
+                        foreach (string operation in operations)
+                        {
+                            string c = operation.Trim();
+                            interTextCommands(c);
+                        }
+
+
+                    }
+                    break;
+                }
+            }
+
+
+        }
+
+
+        private bool DiceOperation(int roll, int condition, string boolOp)
+        {
+            switch (boolOp)
+            {
+                case ">": return roll > condition;
+                case ">=": return roll >= condition;
+                case "<": return roll < condition;
+                case "<=": return roll <= condition;
+                case "==": return roll == condition;
+                case "!=": return roll != condition;
+
+                default: throw new Exception("Invalid Logic Operation");
+            }
+        }
+
+
+
 
         private void LinkTo(int cellNum)
         {

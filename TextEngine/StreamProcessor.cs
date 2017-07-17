@@ -89,6 +89,7 @@ namespace TextEngine
                 }
             }
 
+
             currentBlock.RemoveRange(0, nextCommand.Count + 1);
             return nextCommand;
         }

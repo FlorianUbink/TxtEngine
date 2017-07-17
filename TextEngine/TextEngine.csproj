@@ -56,6 +56,7 @@
   <ItemGroup>
     <Content Include="StoryBlock\222.txt" />
     <Content Include="StoryBlock\425.txt" />
+    <Content Include="StoryBlock\500.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -1,0 +1,10 @@
+﻿500
+#BRANCH
+DICE = 5
+CHOICE
+INPUT|1, DICE|>0
+PLAYER| set Name = Leon, LINK|426
+INPUT|2, DICE|<2
+PLAYER| set Name = Florian, LINK|425
+#END
+#ENDCELL
